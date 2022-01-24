@@ -1,11 +1,12 @@
 require('dotenv').config();
 const inquirer = require('inquirer');
-const cTable = require('console.table');
+require('console.table');
+const Company = require('./src/Company');
 
 const mysql = require('mysql2/promise');
 
 async function main() {
-    try{
+    try {
         const connection = await mysql.createConnection({ 
             host: process.env.DB_HOST,
             database: process.env.DB_DATABASE, 
@@ -39,36 +40,101 @@ async function main() {
                 case 'View All Departments':
                     console.table(await company.viewAllDepartments());
                     break;
-                case 'View all roles':
-                    console.log('View all roles selected')
-                    break;
-                case 'View all employees':
+                case 'View All Employees':
                     console.table(await company.viewAllEmployees());
                     break;
-                case 'Add an employee':
-                    
+                case "View All Roles":
+                    console.table(await company.viewAllRoles());
                     break;
-                case "Add a department":
-                    await inquirer.prompt({
+                case "Add A Department":
+                    const department = await inquirer.prompt({
                         type: 'input',
                         message: 'What is the name of the department',
                         name: 'nameOfNewDepartment',
                         validate: (name) => name !== ""
                     })
-                    await company.addANewDepartment(department.nameOfNewDepartment)
+                    console.table(await company.addANewDepartment(department.nameOfNewDepartment));
                     break;
-                case 'Exit':
-                    process.exit(0);
-                default:
+                case 'Add A Role':
+                    const roleQuestions = [
+                        {
+                            type: 'input',
+                            name: 'title',
+                            message: 'What is the name of the role you wish to add?',
+                            validate: (answer) => answer !== ''
+                        },
+                        {
+                            type: 'input',
+                            name: 'salary',
+                            message: 'What is the salary for the role',
+                            validate: (answer) => answer !== ''
+                        },
+                        {
+                            type: 'input',
+                            name: 'department_id',
+                            message: 'What is the department id?',
+                            validate: (answer) => answer !== ''
+                        }
+                    ];
+                    const roleAnswers = await inquirer.prompt(roleQuestions);
+                        console.table(await company.addANewRole(roleAnswers))
+                        break;
+                case 'Update an employee role':
+                    const updateRoleQuestions = [
+                    {
+                        type: 'number',
+                        name: 'id',
+                        message: 'Please enter id of the employee you want to update in the database',
+                    },
+                    {
+                        type: 'number',
+                        name: 'role_id',
+                        message: 'Please enter the new role id for the employee you wish to update. (Only numbers are accepted)'
+                    }
+                ]
+                const updateRoleAnswers = await inquirer.prompt(updateRoleQuestions);
+                    console.table(await company.updateRole(updateRoleAnswers))
                     break;
 
+                case 'Add an Employee':
+                    const questions = [
+                        {
+                            type: 'input',
+                            name: 'first_name',
+                            message: 'What is the first name of the employee?',
+                            validate: (answer) => answer !== '',
+                        },
+                        {
+                            type: 'input',
+                            name: 'last_name',
+                            message: 'What is the employees last name?',
+                            validate: (answer) => answer !== '',
+                        },
+                        {
+                            type: 'input',
+                            name: 'role_id',
+                            message: 'What is the employees role id?',
+                            validate: (answer) => answer !== ''
+                        },
+                        {
+                            type: 'input',
+                            name: 'manager_id',
+                            message: 'What is the employees manager number?',
+                            validate: (answer) => answer !== ''
+                        }
+                    ];
+
+                    const answers = await inquirer.prompt(questions);
+                        console.table(await company.addANewEmployee(answers))
+                        break;
+                    case 'Exit':
+                        connection.destroy()
+                        process.exit(0)
+                    default: 
+                        break;
             }
         }
 
-
-
-        console.log(selection);
-        
     } catch(err) {
         if (err) console.log(err);
     }
@@ -76,34 +142,3 @@ async function main() {
 
 main();
 
-class Company {
-    constructor(db_connection) {
-        this.db = db_connection;
-    }
-
-    async viewAllDepartments() {
-        const sql = `SELECT * FROM departments`;
-        const [ rows ] = await this.db.query(sql)
-        return rows;
-    }
-
-    async viewAllEmployees(){
-        const sql = `SELECT e.id, e.first_name, e.last_name, roles.title AS title, departments.name AS department, roles.salary AS salary, 
-                    CONCAT(m.first_name, ' ', m.last_name) AS manager
-                    FROM employees e
-                    LEFT JOIN roles ON e.role_id = roles.id,
-                    LEFT JOIN departments ON roles.department_id = departments.id
-                    LEFT JOIN employees m ON m.id = e.manager_id`
-
-        const [ rows ] = await this.db.execute(sql, [department])
-        if (result.affectedRows == 1) return this.viewAllDepartments()
-    }
-
-    async addANewDepartment(department) {
-        const sql = `INSERT INTO departments (name) Values (?)`;
-        const [ result ] = await this.db.execute(sql, [department ])
-        if (result.affectRows === 1) return this.viewAllDepartments;
-    }
-
-    
-}
