@@ -11,6 +11,9 @@ The purpose of the application is to allow non-developers the ability to manage 
 ## Github repo
 https://github.com/ericc97/chal-12-ericc
 
+## Screencastify Link 
+https://watch.screencastify.com/v/bMJwBcf6k6kvtLToemOL
+
 ## Author
 Eric Coleman
 
