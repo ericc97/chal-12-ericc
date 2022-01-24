@@ -8,8 +8,8 @@ The purpose of the application is to allow non-developers the ability to manage 
 * Mysql
 *Node
 
-## Website
-https://lernantino.github.io/run-buddy/
+## Github repo
+https://github.com/ericc97/chal-12-ericc
 
 ## Author
 Eric Coleman
